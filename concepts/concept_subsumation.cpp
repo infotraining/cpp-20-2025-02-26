@@ -57,10 +57,16 @@ concept Shape = requires(const T& obj)
 };
 // clang-format on
 
-// TODO: Add concept ShapeWithColor that subsumes Shape and requires getters/setters for color
+template <typename T>
+concept ShapeWithColor = Shape<T> && requires(T&& obj, Color c) {
+    obj.set_color(c);
+    { obj.get_color() } noexcept -> std::same_as<Color>;
+};
 
 static_assert(Shape<Rect>);
 static_assert(Shape<ColorRect>);
+static_assert(ShapeWithColor<ColorRect>);
+static_assert(!ShapeWithColor<Rect>);
 
 template <Shape T>
 void render(T& shp)
@@ -69,7 +75,13 @@ void render(T& shp)
     shp.draw();
 }
 
-// TODO: Add render function that accepts ShapeWithColor
+template <ShapeWithColor T>
+void render(T& shp)
+{
+    std::cout << "render<Shape T>\n";
+    shp.set_color({255, 255, 255});
+    shp.draw();
+}
 
 TEST_CASE("concept subsumation")
 {
@@ -78,4 +90,73 @@ TEST_CASE("concept subsumation")
 
     render(r);
     render(cr);
+}
+
+////////////////////////////////////
+
+template <typename T>
+struct ValueType
+{
+    using value_type = typename T::value_type;
+};
+
+template <typename T>
+struct ValueType<T*>
+{
+    using value_type = T;
+};
+
+template <typename T>
+using ValueType_t = typename ValueType<T>::value_type;
+
+template <typename T>
+concept MyIterator = requires(T it) {
+    *it;
+    typename ValueType<T>;
+};
+
+template <MyIterator It>
+ValueType_t<It> algorithm(It iterator)
+{
+    ValueType_t<It> var = *iterator;
+    return var;
+}
+
+TEST_CASE("typename in concepts")
+{
+    using IntPtr = int*;
+    static_assert(std::is_same_v<ValueType<IntPtr>::value_type, int>);
+
+    int tab[3] = {1, 2, 3};
+
+    int v1 = algorithm(std::begin(tab));
+}
+
+template <typename T>
+concept Coutable = requires(T&& obj) {
+    std::cout << obj;
+};
+
+template <typename... TArgs>
+auto sum(TArgs... args) // sum(1, 2, 3, 4, 5)
+{
+    //return ((((1 + 2) + 3) + 4) + 5);
+    return (... + args);  // fold-expression
+}
+
+template <Coutable... TArgs>
+void print(const TArgs&... arg)
+{
+    (..., (std::cout << arg << " ")) << "\n";
+
+    // (
+    //     std::cout << 1 << " ",
+    //     std::cout << 3.14 << " ",
+    //     std::cout << "text" << " "
+    // ) << "\n";
+}
+
+TEST_CASE("variadic tempaltes & concepts")
+{
+    print(1, 3.14, "text");
 }

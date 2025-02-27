@@ -15,13 +15,13 @@ namespace Explain
     template <typename T>
     static constexpr T my_pi = 3.141592653589793238;
 
-    template<>
-    static constexpr int my_pi<int> = 4;
+    // template<>
+    // static constexpr int my_pi<int> = 4;
 
     auto MY_2_PI = 2 * static_cast<float>(M_PI);
     auto my_2_pi = 2 * my_pi<float>;
 
-    static_assert(std::cmp_equal(my_pi<int>, 4UL));
+    //static_assert(std::cmp_equal(my_pi<int>, 4UL));
 
     auto r = 10;
     auto area = std::numbers::pi * r * r;
