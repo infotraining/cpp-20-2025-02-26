@@ -150,10 +150,10 @@ TEST_CASE("constraints")
 {
     std::integral auto x = 42;
     int y = 20;
-    CHECK(max_value(x, y) == 20);
+    CHECK(max_value(x, y) == 42);
 
     auto result = max_value(&x, &y);
-    CHECK(max_value(&x, &y) == 20);
+    CHECK(max_value(&x, &y) == 42);
 
     auto sp1 = std::make_shared<int>(42);
     auto sp2 = std::make_shared<int>(65);

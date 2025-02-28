@@ -5,6 +5,8 @@
 #include <source_location>
 #include <string>
 #include <vector>
+#include <utility>
+#include <set>
 
 using namespace std::literals;
 
@@ -153,3 +155,61 @@ TEST_CASE("constexpr if")
     REQUIRE(Cpp17::is_power_of_2(64));
     REQUIRE(Cpp20::is_power_of_2(1024));
 }
+
+//////////////////////////////////////////////
+// lambda with template parameters
+
+struct Lambda_278345237645
+{
+    int& factor;
+
+    template <typename T, typename TArg>
+    auto operator()(std::vector<T>& vec, TArg&& item) 
+    {
+        vec.push_back(std::forward<TArg>(item));
+    }
+};
+
+
+TEST_CASE("lambda with template parameters")
+{
+    int factor = 2;
+    auto add = [&factor = std::as_const(factor)]<typename T, typename TArg>(std::vector<T>& vec, TArg&& item) mutable -> TArg  {
+        vec.push_back(std::forward<TArg>(item) * factor);
+        return factor;        
+    };
+
+    SECTION("it works like this")
+    {
+        auto add = Lambda_278345237645{factor};
+    }
+
+    std::vector<int> vec;
+    add(vec, 42);
+    add(vec, 665.44);
+
+    REQUIRE(vec.size() == 2);
+    REQUIRE(vec == std::vector{84, 1330});
+    REQUIRE(factor == 2);
+
+    auto callback = +[](int n) { std::cout << n << "\n"; };
+    callback(42);
+}
+
+TEST_CASE("type of lambda")
+{
+    auto cmp_ptrs = [](const auto& ptr1, const auto& ptr2) { return *ptr1 < *ptr2; };
+    auto backup = decltype(cmp_ptrs){};
+
+    std::set<std::shared_ptr<int>, decltype(cmp_ptrs)> ptrs;
+
+    ptrs.insert(std::make_shared<int>(42));
+    ptrs.insert(std::make_shared<int>(665));
+    ptrs.insert(std::make_shared<int>(2));
+    ptrs.insert(std::make_shared<int>(667));
+
+    for(const auto& ptr : ptrs)
+        std::cout << *ptr << " ";
+    std::cout << "\n";
+}
+

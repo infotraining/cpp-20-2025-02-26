@@ -48,6 +48,24 @@ TEST_CASE("split")
     CHECK(split(s4) == std::pair{""sv, "434"sv});
 }
 
+//template <std::ranges::range TRng>
+void print_all(std::ranges::view auto rng)
+{
+    for(const auto& item : rng)
+        std::cout << item << " ";
+    std::cout << "\n";
+}
+
+TEST_CASE("print_all")
+{
+    auto evens = std::views::iota(1, 10) | std::views::filter([](auto n) { return n % 2 == 0;} );
+    print_all(evens); // O(1)
+
+    std::vector<int> vec = {1, 2, 3, 4};
+    print_all(std::views::all(vec));
+
+}
+
 TEST_CASE("Exercise - ranges")
 {
     const std::vector<std::string_view> lines = { 
@@ -67,11 +85,18 @@ TEST_CASE("Exercise - ranges")
 
     helpers::print(lines, "lines");
 
-    auto result = lines;
+    auto result = lines 
+        | std::views::drop_while([](std::string_view sv) { return sv.starts_with("#"); })
+        | std::views::filter([](std::string_view sv) { return sv != "\n"; })        
+        | std::views::transform([](auto sv) { return split(sv); })
+        | std::views::elements<1>;
 
     helpers::print(result, "result");
 
     auto expected_result = {"one"s, "two"s, "three"s, "four"s, "five"s, "six"s};
 
-    //CHECK(std::ranges::equal(result, expected_result));
+    CHECK(std::ranges::equal(result, expected_result));
+
+    print_all(result);
 }
+
