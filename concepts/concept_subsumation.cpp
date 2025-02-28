@@ -147,7 +147,7 @@ auto sum(TArgs... args) // sum(1, 2, 3, 4, 5)
 template <Coutable... TArgs>
 void print(const TArgs&... arg)
 {
-    (..., (std::cout << arg << " ")) << "\n";
+    (..., (std::cout << arg << " ")) << "\n"; // fold expressions - C++17
 
     // (
     //     std::cout << 1 << " ",

@@ -320,9 +320,18 @@ struct Data
     }
 };
 
+template <typename TContainer>
+void foo(TContainer& container)
+{
+    using TValue = std::ranges::range_value_t<TContainer>;
+    TValue temp{};
+}
+
 TEST_CASE("vector & move")
 {
     std::vector<Data> vec;
+
+    std::ranges::range_value_t<decltype(vec)> x;
 
     for(int i = 0; i < 10; ++i)
     {
